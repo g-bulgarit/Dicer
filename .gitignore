@@ -3,3 +3,4 @@
 *.PNG
 *.BMP
 .idea/*
+venv/*
