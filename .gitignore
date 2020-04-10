@@ -2,4 +2,4 @@
 *.JPEG
 *.PNG
 *.BMP
-
+.idea/*
