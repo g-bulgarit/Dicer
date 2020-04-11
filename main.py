@@ -63,16 +63,26 @@ def avg_dice_map(dice_map, cube_res):
     for row in range(0, cubes_w):
         for col in range(0, cubes_h):
             empty_mat[row][col] = (np.sum(dice_map[row * cube_res:(row + 1) * cube_res,
-                                                  col * cube_res:(col + 1) * cube_res]))//(cube_res**2)
+                                                   col * cube_res:(col + 1) * cube_res]))//(cube_res**2)
     return empty_mat
 
 
 def build_cube(dice_map):
     cfg = load_configuration()
     dice_image_size = int(cfg['Resolution']['dice_image_size'])
-    w, h = dice_map.shape
-    w1 = w*dice_image_size
-    h1 = h*dice_image_size
+    physical_size = int(cfg['Physical']['dice_dimension'])
+    h, w = dice_map.shape
+    w1 = w * dice_image_size
+    h1 = h * dice_image_size
+
+    print(f"{w} cubes wide,\n"
+          f"{h} cubes tall, \n"
+          f"{w*h} total cubes.\n")
+
+    # Physical properties
+    print(f"{w * physical_size} [mm] wide,\n"
+          f"{h * physical_size} [mm] tall. \n")
+
     final_pic = Image.new('L', (w1, h1))
     cube1 = Image.open(cfg['Assets']['cube_1'])
     cube2 = Image.open(cfg['Assets']['cube_2'])
@@ -80,21 +90,21 @@ def build_cube(dice_map):
     cube4 = Image.open(cfg['Assets']['cube_4'])
     cube5 = Image.open(cfg['Assets']['cube_5'])
     cube6 = Image.open(cfg['Assets']['cube_6'])
-    for row in range(0, w):
-        for col in range(0, h):
+    for row in range(0, h):
+        for col in range(0, w):
             value = dice_map[row][col]
             if value == 1:
-                final_pic.paste(cube1, (row*dice_image_size, col*dice_image_size))
+                final_pic.paste(cube1, (col * dice_image_size, row * dice_image_size))
             if value == 2:
-                final_pic.paste(cube2, (row*dice_image_size, col*dice_image_size))
+                final_pic.paste(cube2, (col * dice_image_size, row * dice_image_size))
             if value == 3:
-                final_pic.paste(cube3, (row*dice_image_size, col*dice_image_size))
+                final_pic.paste(cube3, (col * dice_image_size, row * dice_image_size))
             if value == 4:
-                final_pic.paste(cube4, (row*dice_image_size, col*dice_image_size))
+                final_pic.paste(cube4, (col * dice_image_size, row * dice_image_size))
             if value == 5:
-                final_pic.paste(cube5, (row*dice_image_size, col*dice_image_size))
+                final_pic.paste(cube5, (col * dice_image_size, row * dice_image_size))
             if value == 6:
-                final_pic.paste(cube6, (row*dice_image_size, col*dice_image_size))
+                final_pic.paste(cube6, (col * dice_image_size, row * dice_image_size))
     return final_pic
 
 
@@ -120,7 +130,7 @@ def main():
 
     new_im, dice_map = div_image(scaled_matrix)
     mat = avg_dice_map(dice_map, cube_res)
-    cube_map = build_cube(mat).transpose(Image.TRANSPOSE)
+    cube_map = build_cube(mat)
     cube_map.show()
 
 
