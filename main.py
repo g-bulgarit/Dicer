@@ -1,5 +1,6 @@
 from PIL import Image
 import numpy as np
+from gooey import GooeyParser, Gooey
 
 
 def load_configuration():
@@ -53,19 +54,20 @@ def div_image(matrix):
     return zero_mat, dice_map
 
 
-def avg_dice_map (dice_map , cube_res):
+def avg_dice_map(dice_map, cube_res):
     w_map, h_map = dice_map.shape
-    cubes_w = w_map//cube_res
-    cubes_h = h_map//cube_res
-    empt_mat = np.zeros((cubes_w, cubes_h))
+    cubes_w = w_map // cube_res
+    cubes_h = h_map // cube_res
+    empty_mat = np.zeros((cubes_w, cubes_h))
 
-    for row in range (0,cubes_w):
-        for col in range (0,cubes_h):
-            empt_mat[row][col] = (np.sum(dice_map[row*cube_res:(row+1)*cube_res, col*cube_res:(col+1)*cube_res]))//(cube_res**2)
-    return empt_mat
+    for row in range(0, cubes_w):
+        for col in range(0, cubes_h):
+            empty_mat[row][col] = (np.sum(dice_map[row * cube_res:(row + 1) * cube_res,
+                                                  col * cube_res:(col + 1) * cube_res]))//(cube_res**2)
+    return empty_mat
 
 
-def build_cube (dice_map ,):
+def build_cube(dice_map):
     cfg = load_configuration()
     dice_image_size = int(cfg['Resolution']['dice_image_size'])
     w, h = dice_map.shape
@@ -96,9 +98,18 @@ def build_cube (dice_map ,):
     return final_pic
 
 
-
+# Gooey decorator for quick GUI over the main function.
+@Gooey(program_name="Dicer: Make beautiful dice portraits",
+       body_bg_color="#fceed1",
+       header_bg_color="#e1b382")
 def main():
-    image_file = Image.open("Assets/rick.jpg")
+    parser = GooeyParser(description="Select an image to process")
+    parser.add_argument('Filename', widget="FileChooser")
+
+    args = parser.parse_args()
+
+    path = args.Filename
+    image_file = Image.open(path)
     image_file = image_file.convert('L')
 
     cfg = load_configuration()
@@ -108,10 +119,13 @@ def main():
     scaled_matrix = np.asarray(scaled)
 
     new_im, dice_map = div_image(scaled_matrix)
-    mat = avg_dice_map(dice_map,cube_res)
-    final = build_cube(mat)
-    final.show()
+    mat = avg_dice_map(dice_map, cube_res)
+    cube_map = build_cube(mat)
+    cube_map.show()
 
 
 if __name__ == "__main__":
     main()
+
+# TODO:
+#   1. Make output file to contain the dice-list separated by lines, for assembly
