@@ -65,8 +65,40 @@ def avg_dice_map (dice_map , cube_res):
     return empt_mat
 
 
+def build_cube (dice_map ,):
+    cfg = load_configuration()
+    dice_image_size = int(cfg['Resolution']['dice_image_size'])
+    w, h = dice_map.shape
+    w1 = w*dice_image_size
+    h1 = h*dice_image_size
+    final_pic = Image.new('L', (w1, h1))
+    cube1 = Image.open(cfg['Assets']['cube_1'])
+    cube2 = Image.open(cfg['Assets']['cube_2'])
+    cube3 = Image.open(cfg['Assets']['cube_3'])
+    cube4 = Image.open(cfg['Assets']['cube_4'])
+    cube5 = Image.open(cfg['Assets']['cube_5'])
+    cube6 = Image.open(cfg['Assets']['cube_6'])
+    for row in range(0, w):
+        for col in range(0, h):
+            value = dice_map.T[row][col]
+            if value == 1:
+                final_pic.paste(cube1, (row*dice_image_size, col*dice_image_size))
+            if value == 2:
+                final_pic.paste(cube2, (row*dice_image_size, col*dice_image_size))
+            if value == 3:
+                final_pic.paste(cube3, (row*dice_image_size, col*dice_image_size))
+            if value == 4:
+                final_pic.paste(cube4, (row*dice_image_size, col*dice_image_size))
+            if value == 5:
+                final_pic.paste(cube5, (row*dice_image_size, col*dice_image_size))
+            if value == 6:
+                final_pic.paste(cube6, (row*dice_image_size, col*dice_image_size))
+    return final_pic
+
+
+
 def main():
-    image_file = Image.open("Assets/goku.jpg")
+    image_file = Image.open("Assets/rick.jpg")
     image_file = image_file.convert('L')
 
     cfg = load_configuration()
@@ -77,8 +109,8 @@ def main():
 
     new_im, dice_map = div_image(scaled_matrix)
     mat = avg_dice_map(dice_map,cube_res)
-    mat2 = avg_dice_map(new_im,cube_res)
-    Image.fromarray(mat2).show()
+    final = build_cube(mat)
+    final.show()
 
 
 if __name__ == "__main__":
