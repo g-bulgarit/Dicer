@@ -82,7 +82,7 @@ def build_cube(dice_map):
     cube6 = Image.open(cfg['Assets']['cube_6'])
     for row in range(0, w):
         for col in range(0, h):
-            value = dice_map.T[row][col]
+            value = dice_map[row][col]
             if value == 1:
                 final_pic.paste(cube1, (row*dice_image_size, col*dice_image_size))
             if value == 2:
@@ -120,7 +120,7 @@ def main():
 
     new_im, dice_map = div_image(scaled_matrix)
     mat = avg_dice_map(dice_map, cube_res)
-    cube_map = build_cube(mat)
+    cube_map = build_cube(mat).transpose(Image.TRANSPOSE)
     cube_map.show()
 
 
