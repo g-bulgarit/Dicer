@@ -1,3 +1,7 @@
-<p align="center"><img width=500px src="https://i.imgur.com/NDrwQwb.png"></p>
+<p align="center"><img width=500px src="https://i.imgur.com/D3qP1yP.png"></p>
+<p align="center"><img width=1000px src="https://i.imgur.com/StONFmh.png"></p>
 
-Dice images taken from https://game-icons.net/tags/dice.html and rescaled.
+________________
+## Assets
+* Dice images taken from https://game-icons.net/tags/dice.html and rescaled.
+
