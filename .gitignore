@@ -4,3 +4,5 @@
 *.BMP
 .idea/*
 venv/*
+*.TXT
+__pycache__/*
