@@ -1,111 +1,5 @@
-from PIL import Image
-import numpy as np
 from gooey import GooeyParser, Gooey
-
-
-def load_configuration():
-    """
-    Load configuration from the config file.
-    :return: configparser object.
-    """
-
-    import configparser
-    config_reader = configparser.ConfigParser()
-    config_reader.read('config.ini')
-    return config_reader
-
-
-def scale_image(image, cube_size):
-    """
-    Scale the input image to a whole number of cubes with minimal stretch.
-    :param image: PIL Image object.
-    :param cube_size: Cube size from configuration, int.
-    :return: A scaled PIL Image.
-    """
-    image_w, image_h = image.size
-
-    scale_h = image_h // cube_size  # Amount of cubes that fit in the height
-    new_h = scale_h * cube_size
-
-    scale_w = image_w // cube_size   # Amount of cubes that fit in the width
-    new_w = scale_w * cube_size
-
-    new_image = image.resize((new_w, new_h))  # Resize the image accordingly.
-    return new_image
-
-
-def div_image(matrix):
-    """
-    Split the image by threshold.
-    :param matrix: A numpy array of a B/W image.
-    :return: A new matrix, thresholded to 6 values.
-    """
-    zero_mat = np.zeros(matrix.shape)  # Construct a zero matrix
-    dice_map = np.zeros(matrix.shape)  # Construct a zero matrix
-
-    image_top = np.max(matrix)  # Get min and max pixels
-    image_bottom = np.min(matrix)
-
-    delta = (image_top-image_bottom)//6
-    for i in range(0, 6):
-        zero_mat[matrix >= i*delta] = (255*i//6)  # Let all pixels above the threshold be one color.
-        dice_map[matrix >= i*delta] = (i+1)  # Let all pixels above the threshold be one color.
-
-    return zero_mat, dice_map
-
-
-def avg_dice_map(dice_map, cube_res):
-    w_map, h_map = dice_map.shape
-    cubes_w = w_map // cube_res
-    cubes_h = h_map // cube_res
-    empty_mat = np.zeros((cubes_w, cubes_h))
-
-    for row in range(0, cubes_w):
-        for col in range(0, cubes_h):
-            empty_mat[row][col] = (np.sum(dice_map[row * cube_res:(row + 1) * cube_res,
-                                                   col * cube_res:(col + 1) * cube_res]))//(cube_res**2)
-    return empty_mat
-
-
-def build_cube(dice_map):
-    cfg = load_configuration()
-    dice_image_size = int(cfg['Resolution']['dice_image_size'])
-    physical_size = int(cfg['Physical']['dice_dimension'])
-    h, w = dice_map.shape
-    w1 = w * dice_image_size
-    h1 = h * dice_image_size
-
-    print(f"{w} cubes wide,\n"
-          f"{h} cubes tall, \n"
-          f"{w*h} total cubes.\n")
-
-    # Physical properties
-    print(f"{w * physical_size} [mm] wide,\n"
-          f"{h * physical_size} [mm] tall. \n")
-
-    final_pic = Image.new('L', (w1, h1))
-    cube1 = Image.open(cfg['Assets']['cube_1'])
-    cube2 = Image.open(cfg['Assets']['cube_2'])
-    cube3 = Image.open(cfg['Assets']['cube_3'])
-    cube4 = Image.open(cfg['Assets']['cube_4'])
-    cube5 = Image.open(cfg['Assets']['cube_5'])
-    cube6 = Image.open(cfg['Assets']['cube_6'])
-    for row in range(0, h):
-        for col in range(0, w):
-            value = dice_map[row][col]
-            if value == 1:
-                final_pic.paste(cube1, (col * dice_image_size, row * dice_image_size))
-            if value == 2:
-                final_pic.paste(cube2, (col * dice_image_size, row * dice_image_size))
-            if value == 3:
-                final_pic.paste(cube3, (col * dice_image_size, row * dice_image_size))
-            if value == 4:
-                final_pic.paste(cube4, (col * dice_image_size, row * dice_image_size))
-            if value == 5:
-                final_pic.paste(cube5, (col * dice_image_size, row * dice_image_size))
-            if value == 6:
-                final_pic.paste(cube6, (col * dice_image_size, row * dice_image_size))
-    return final_pic
+from algo import *
 
 
 # Gooey decorator for quick GUI over the main function.
@@ -114,24 +8,58 @@ def build_cube(dice_map):
        header_bg_color="#e1b382")
 def main():
     parser = GooeyParser(description="Select an image to process")
-    parser.add_argument('Filename', widget="FileChooser")
+    parser.add_argument('path', metavar='File', widget="FileChooser")
+    parser.add_argument('--dice_size',
+                        metavar="Dice Size",
+                        type=int,
+                        help="Dice size in millimeters, 16mm is the standard size.\n"
+                             "Other sizes include 12mm and 8mm",
+                        default=16,
+                        gooey_options={
+                            'validator': {
+                                'test': '0<int(user_input)',
+                                'message': 'Dice size can\'t be negative!'
+                            }
+                        }
+                        )
+    parser.add_argument('--dice_px_ratio',
+                        metavar="Cube to Pixel Ratio",
+                        type=int,
+                        help="How many pixels to consume with one cube.\n"
+                             "Increasing this value changes the result drastically.\n"
+                             "Generally - small value = more detail.",
+                        default=15,
+                        gooey_options={
+                            'validator': {
+                                'test': '0<int(user_input)',
+                                'message': 'The ratio can\'t be negative!'
+                            }
+                        }
+                        )
 
+    # Parse arguments from GUI
     args = parser.parse_args()
+    physical_size = args.dice_size
+    cube_res = args.dice_px_ratio
+    path = args.path
 
-    path = args.Filename
+    # Open the image and convert to B/W
     image_file = Image.open(path)
     image_file = image_file.convert('L')
 
-    cfg = load_configuration()
-    cube_res = int(cfg["Resolution"]["dice_size_px"])
-
+    # Rescale and numpy-ify
     scaled = scale_image(image_file, cube_res)
     scaled_matrix = np.asarray(scaled)
 
+    # Make it out of dice!
     new_im, dice_map = div_image(scaled_matrix)
-    mat = avg_dice_map(dice_map, cube_res)
-    cube_map = build_cube(mat)
+    final_dice_matrix = avg_dice_map(dice_map, cube_res)
+    cube_map = build_cube(final_dice_matrix, physical_size)
     cube_map.show()
+
+    # Save output map to file
+    compile_build_instructions(final_dice_matrix, args)
+
 
 
 if __name__ == "__main__":
@@ -139,3 +67,4 @@ if __name__ == "__main__":
 
 # TODO:
 #   1. Make output file to contain the dice-list separated by lines, for assembly
+#   2. Work on changing dice orientation for the asymmetric numbers 2,3,6
