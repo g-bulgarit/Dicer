@@ -39,7 +39,6 @@ def div_image(matrix):
     :param matrix: A numpy array of a B/W image.
     :return: A new matrix, thresholded to 6 values.
     """
-    zero_mat = np.zeros(matrix.shape)  # Construct a zero matrix
     dice_map = np.zeros(matrix.shape)  # Construct a zero matrix
 
     image_top = np.max(matrix)  # Get min and max pixels
@@ -47,10 +46,9 @@ def div_image(matrix):
 
     delta = (image_top-image_bottom)//6
     for i in range(0, 6):
-        zero_mat[matrix >= i*delta] = (255*i//6)  # Let all pixels above the threshold be one color.
         dice_map[matrix >= i*delta] = (i+1)  # Let all pixels above the threshold be one color.
 
-    return zero_mat, dice_map
+    return dice_map
 
 
 def avg_dice_map(thresh_img, cube_res):
@@ -81,6 +79,7 @@ def build_cube(dice_map, physical_size, dice_color):
     :param dice_map: A matrix that contains dice information.
     :param physical_size: size of a single dice, in millimeters - used only for
                           actual size calculation.
+    :param dice_color: Color of the dice as a string, from the GUI.
     :return: the final image, made up from dice.
     """
 
@@ -101,14 +100,6 @@ def build_cube(dice_map, physical_size, dice_color):
     # Create the final image and load all dice pictures to memory.
     final_pic = Image.new('L', (w1, h1))
 
-    # Check dice color, the way the code is built makes it so that 1 is the darkest color,
-    # because the code was designed with black dice in mind.
-    # To use white dice, we note that 6 is the darkest color, so we load cube1 as the image of 6,
-    # and so on for all other dice.
-    # This way we don't need to do any modifications to the algorithm,
-    # and since the images are labeled correctly in the configuration file,
-    # there is no room for error.
-
     if dice_color == "Black":
         cube1 = Image.open(cfg['Assets']['cube_1'])
         cube2 = Image.open(cfg['Assets']['cube_2'])
@@ -117,12 +108,12 @@ def build_cube(dice_map, physical_size, dice_color):
         cube5 = Image.open(cfg['Assets']['cube_5'])
         cube6 = Image.open(cfg['Assets']['cube_6'])
     else:
-        cube1 = Image.open(cfg['Assets']['cube_6w'])
-        cube2 = Image.open(cfg['Assets']['cube_5w'])
-        cube3 = Image.open(cfg['Assets']['cube_4w'])
-        cube4 = Image.open(cfg['Assets']['cube_3w'])
-        cube5 = Image.open(cfg['Assets']['cube_2w'])
-        cube6 = Image.open(cfg['Assets']['cube_1w'])
+        cube1 = Image.open(cfg['Assets']['cube_1w'])
+        cube2 = Image.open(cfg['Assets']['cube_2w'])
+        cube3 = Image.open(cfg['Assets']['cube_3w'])
+        cube4 = Image.open(cfg['Assets']['cube_4w'])
+        cube5 = Image.open(cfg['Assets']['cube_5w'])
+        cube6 = Image.open(cfg['Assets']['cube_6w'])
 
     # Place dice
     for row in range(0, h):

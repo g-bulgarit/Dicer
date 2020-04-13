@@ -58,7 +58,12 @@ def main():
     scaled_matrix = np.asarray(scaled)
 
     # Make it out of dice!
-    new_im, dice_map = div_image(scaled_matrix)
+    dice_map = div_image(scaled_matrix)
+
+    # If the dice color is white, invert the dice map
+    if dice_color == "White":
+        dice_map = 7-dice_map
+
     final_dice_matrix = avg_dice_map(dice_map, cube_res)
     cube_map = build_cube(final_dice_matrix, physical_size, dice_color)
     cube_map.show()
