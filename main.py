@@ -8,7 +8,12 @@ from algo import *
        header_bg_color="#e1b382")
 def main():
     parser = GooeyParser(description="Select an image to process")
-    parser.add_argument('path', metavar='File', widget="FileChooser")
+    parser.add_argument('path', metavar='File', widget="FileChooser", help="Browse to your file.")
+    parser.add_argument('dice_color', metavar='Dice Color', widget="Dropdown",
+                        help="Choose the color of dice to use.",
+                        choices=["Black", "White"],
+                        default="Black")
+
     parser.add_argument('--dice_size',
                         metavar="Dice Size",
                         type=int,
@@ -41,6 +46,7 @@ def main():
     args = parser.parse_args()
     physical_size = args.dice_size
     cube_res = args.dice_px_ratio
+    dice_color = args.dice_color
     path = args.path
 
     # Open the image and convert to B/W
@@ -54,7 +60,7 @@ def main():
     # Make it out of dice!
     new_im, dice_map = div_image(scaled_matrix)
     final_dice_matrix = avg_dice_map(dice_map, cube_res)
-    cube_map = build_cube(final_dice_matrix, physical_size)
+    cube_map = build_cube(final_dice_matrix, physical_size, dice_color)
     cube_map.show()
 
     # Save output map to file
@@ -66,5 +72,6 @@ if __name__ == "__main__":
     main()
 
 # TODO:
-#   1. Make output file to contain the dice-list separated by lines, for assembly
+#   1. Make output file to contain the dice-list separated by lines, for assembly [V]
 #   2. Work on changing dice orientation for the asymmetric numbers 2,3,6
+#   3. Add white dice as an option. [V]

@@ -75,7 +75,7 @@ def avg_dice_map(thresh_img, cube_res):
     return dice_matrix
 
 
-def build_cube(dice_map, physical_size):
+def build_cube(dice_map, physical_size, dice_color):
     """
     Create a cube image from a cube map.
     :param dice_map: A matrix that contains dice information.
@@ -100,12 +100,29 @@ def build_cube(dice_map, physical_size):
 
     # Create the final image and load all dice pictures to memory.
     final_pic = Image.new('L', (w1, h1))
-    cube1 = Image.open(cfg['Assets']['cube_1'])
-    cube2 = Image.open(cfg['Assets']['cube_2'])
-    cube3 = Image.open(cfg['Assets']['cube_3'])
-    cube4 = Image.open(cfg['Assets']['cube_4'])
-    cube5 = Image.open(cfg['Assets']['cube_5'])
-    cube6 = Image.open(cfg['Assets']['cube_6'])
+
+    # Check dice color, the way the code is built makes it so that 1 is the darkest color,
+    # because the code was designed with black dice in mind.
+    # To use white dice, we note that 6 is the darkest color, so we load cube1 as the image of 6,
+    # and so on for all other dice.
+    # This way we don't need to do any modifications to the algorithm,
+    # and since the images are labeled correctly in the configuration file,
+    # there is no room for error.
+
+    if dice_color == "Black":
+        cube1 = Image.open(cfg['Assets']['cube_1'])
+        cube2 = Image.open(cfg['Assets']['cube_2'])
+        cube3 = Image.open(cfg['Assets']['cube_3'])
+        cube4 = Image.open(cfg['Assets']['cube_4'])
+        cube5 = Image.open(cfg['Assets']['cube_5'])
+        cube6 = Image.open(cfg['Assets']['cube_6'])
+    else:
+        cube1 = Image.open(cfg['Assets']['cube_6w'])
+        cube2 = Image.open(cfg['Assets']['cube_5w'])
+        cube3 = Image.open(cfg['Assets']['cube_4w'])
+        cube4 = Image.open(cfg['Assets']['cube_3w'])
+        cube5 = Image.open(cfg['Assets']['cube_2w'])
+        cube6 = Image.open(cfg['Assets']['cube_1w'])
 
     # Place dice
     for row in range(0, h):
